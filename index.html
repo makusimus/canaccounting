@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>CanAccounting</title>
+<style>
+*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;max-width:1100px;margin:40px auto;padding:0 20px;background:#f5f5f5}
+.card{background:#fff;padding:24px;border-radius:8px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.flex{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.flex>div{flex:1;min-width:160px}
+label{display:block;margin:8px 0 4px;font-weight:600;color:#555;font-size:13px}
+input[type=file],select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px}
+button{padding:10px 20px;border-radius:4px;cursor:pointer;border:none;font-size:14px}
+.bp{background:#2563eb;color:#fff}.bg{background:#16a34a;color:#fff}.br{background:#dc2626;color:#fff}
+.in{color:#666;font-size:13px;margin:4px 0}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.sb{background:#f0f0f0;padding:12px;border-radius:6px;text-align:center}
+.sb .n{font-size:24px;font-weight:700;color:#2563eb}.sb .l{font-size:12px;color:#666}
+.tw{overflow-x:auto;max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f0f0f0;position:sticky;top:0;padding:8px 6px;text-align:left;border-bottom:2px solid #ddd;white-space:nowrap}
+td{padding:4px 6px;border-bottom:1px solid #eee}
+.tm{opacity:.7;background:#f9f9f9}.cs select{width:140px;padding:2px 4px;font-size:12px;border:1px solid #2563eb;border-radius:3px}
+.bd{display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px}
+.bdm{background:#e0e0e0;color:#666;font-size:10px}.bdo{background:#fef3c7;color:#d97706}
+.ta{display:flex;border-bottom:2px solid #ddd;margin-bottom:16px}
+.tb{padding:8px 20px;cursor:pointer;font-size:14px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;border-top:none;border-left:none;border-right:none;background:none}
+.tb.a{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
+.tc{display:none}.tc.a{display:block}
+</style></head><body>
+<h1>🧾 CanAccounting</h1>
+<div class="card">
+  <div class="flex">
+    <div><label>Bank files (.csv or .xlsx)</label><input type="file" id="files" accept=".csv,.xlsx" multiple></div>
+    <div><label>Spent.csv (master)</label><input type="file" id="ms" accept=".csv"></div>
+    <div><label>Funding.csv (master)</label><input type="file" id="mf" accept=".csv"></div>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="bg" onclick="process()" style="font-size:16px;padding:12px 28px;">🚀 Process</button>
+  </div>
+  <div id="status" class="in" style="margin-top:8px;"></div>
+</div>
+<div id="results" style="display:none;">
+  <div class="card"><div class="sg" id="sg"></div></div>
+  <div class="card">
+    <div class="ta">
+      <button class="tb a" onclick="st('spent',this)">📊 Spent</button>
+      <button class="tb" onclick="st('funding',this)">💰 Funding</button>
+    </div>
+    <div id="t-spent" class="tc a"></div>
+    <div id="t-funding" class="tc"></div>
+    <div style="margin-top:12px;">
+      <button class="bg" onclick="dl('spent')">⬇ Spent.csv</button>
+      <button class="bg" onclick="dl('funding')">⬇ Funding.csv</button>
+    </div>
+  </div>
+</div>
+<script>
+const CATS=['Outside dining','Sport and recreation','Freshco','Liquor mart','Car expenses','Cloth','Education','Variety items','Gasoline','Superstore','Subscriptions','Winners','Mobile&Internet','Costco','Walmart','Amazon','Canada travel','International travel','Ski','Entertainment','Medicine','University','Other','Split expences','Electronics','Rent','Utilities','Transfer to Scotia','Transfer to Wise','Dani transfer','Investments','Liubov transfer','Taxi','Split app'];
+const FCATS=['Salary','Other income','Liubov transfer','Initial balance 2025'];
+var spentData=[],fundingData=[];
+
+async function process(){
+ var st=document.getElementById('status');
+ var fi=document.getElementById('files');
+ if(!fi.files.length){st.innerHTML='Select bank files first.';return}
+ st.innerHTML='Sending to server...';
+ var fd=new FormData();
+ for(var f of fi.files)fd.append(f.name,f);
+ var ms=document.getElementById('ms');if(ms.files.length)fd.append('masterSpent',ms.files[0]);
+ var mf=document.getElementById('mf');if(mf.files.length)fd.append('masterFunding',mf.files[0]);
+ try{
+  var r=await fetch('/process',{method:'POST',body:fd});
+  var d=await r.json();
+  spentData=d.spent||[];fundingData=d.funding||[];
+  document.getElementById('sg').innerHTML=
+   '<div class="sb"><div class="n">'+spentData.length+'</div><div class="l">Spent</div></div>'+
+   '<div class="sb"><div class="n">'+fundingData.length+'</div><div class="l">Funding</div></div>'+
+   '<div class="sb"><div class="n">'+(d.excluded||0)+'</div><div class="l">Excluded</div></div>'+
+   '<div class="sb"><div class="n">'+Object.keys(d.overrides||{}).length+'</div><div class="l">Overrides</div></div>';
+  rt('spent',spentData);rt('funding',fundingData);
+  document.getElementById('results').style.display='block';
+  st.innerHTML='Done. '+spentData.length+' spent, '+fundingData.length+' funding.';
+ }catch(e){st.innerHTML='Error: '+e.message}
+}
+
+function rt(type,data){
+ var el=document.getElementById('t-'+type),cols=['Bank','Date','Transaction Details','Category','Amount'];
+ var cats=type==='spent'?CATS:FCATS;
+ if(!data.length){el.innerHTML='<p class="in">No data.</p>';return}
+ var h='<div class="tw"><table><thead><tr>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'<th></th></tr></thead><tbody>';
+ data.forEach(function(r,i){
+  var isMaster=r._master===true;
+  h+='<tr class="'+(isMaster?'tm':'')+'">';
+  cols.forEach(function(c){
+   if(c==='Category'){
+    if(isMaster){h+='<td>'+(r[c]||'')+' <span class="bd bdm">master</span></td>'}
+    else{h+='<td class="cs"><select onchange="cc(\''+type+'\','+i+',this.value)">'+cats.map(function(cat){return '<option value="'+cat+'"'+(r[c]===cat?' selected':'')+'>'+cat+'</option>'}).join('')+'</select></td>'}
+   }else if(c==='Amount'){h+='<td>'+(r[c]!==undefined?Number(r[c]).toFixed(2):'')+'</td>'}
+   else{h+='<td>'+(r[c]||'')+'</td>'}
+  });
+  h+='<td>'+(isMaster?'':'<button class="br" style="padding:2px 8px;font-size:12px;" onclick="rr(\''+type+'\','+i+')">✕</button>')+'</td></tr>'
+ });
+ h+='</tbody></table></div>';el.innerHTML=h
+}
+
+async function cc(type,i,v){
+ var d=type==='spent'?spentData:fundingData;if(d[i].Category===v)return;
+ d[i].Category=v;rt(type,d);
+ var det=d[i]['Transaction Details']||'';
+ if(det.length>5&&!d[i]._master){
+  try{await fetch('/save_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:det.substring(0,60).trim(),category:v})})}
+  catch(e){}
+ }
+}
+function rr(type,i){var d=type==='spent'?spentData:fundingData;d.splice(i,1);rt(type,d)}
+function dl(type){
+ var d=type==='spent'?spentData:fundingData,cols=['Bank','Date','Transaction Details','Category','Amount'];
+ var csv=cols.join(',')+'\n';
+ d.forEach(function(r){csv+=cols.map(function(c){var v=String(r[c]||'');return v.includes(',')||v.includes('"')?'"'+v.replace(/"/g,'""')+'"':v}).join(',')+'\n'});
+ var b=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(b);a.download=type==='spent'?'Spent.csv':'Funding.csv';a.click()
+}
+function st(n,el){
+ document.querySelectorAll('.tb').forEach(function(t){t.classList.remove('a')});
+ document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('a')});
+ el.classList.add('a');document.getElementById('t-'+n).classList.add('a')
+}
+</script></body></html>
