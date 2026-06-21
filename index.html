@@ -15,13 +15,16 @@ button{padding:10px 20px;border-radius:4px;cursor:pointer;border:none;font-size:
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:#f0f0f0;position:sticky;top:0;padding:8px 6px;text-align:left;border-bottom:2px solid #ddd;white-space:nowrap}
 td{padding:4px 6px;border-bottom:1px solid #eee}
-.tm{opacity:.7;background:#f9f9f9}.cs select{width:140px;padding:2px 4px;font-size:12px;border:1px solid #2563eb;border-radius:3px}
+.tm{opacity:.5;background:#f5f5f5;font-style:italic;color:#999}
+.cs select{width:140px;padding:2px 4px;font-size:12px;border:1px solid #2563eb;border-radius:3px}
 .bd{display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px}
 .bdm{background:#e0e0e0;color:#666;font-size:10px}.bdo{background:#fef3c7;color:#d97706}
 .ta{display:flex;border-bottom:2px solid #ddd;margin-bottom:16px}
 .tb{padding:8px 20px;cursor:pointer;font-size:14px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;border-top:none;border-left:none;border-right:none;background:none}
 .tb.a{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
 .tc{display:none}.tc.a{display:block}
+.flt{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.flt select{width:160px;padding:4px;font-size:12px}
 </style></head><body>
 <h1>🧾 CanAccounting</h1>
 <div class="card">
@@ -51,9 +54,12 @@ td{padding:4px 6px;border-bottom:1px solid #eee}
   </div>
 </div>
 <script>
-const CATS=['Outside dining','Sport and recreation','Freshco','Liquor mart','Car expenses','Cloth','Education','Variety items','Gasoline','Superstore','Subscriptions','Winners','Mobile&Internet','Costco','Walmart','Amazon','Canada travel','International travel','Ski','Entertainment','Medicine','University','Other','Split expences','Electronics','Rent','Utilities','Transfer to Scotia','Transfer to Wise','Dani transfer','Investments','Liubov transfer','Taxi','Split app'];
-const FCATS=['Salary','Other income','Liubov transfer','Initial balance 2025'];
+var CATS=['Outside dining','Sport and recreation','Freshco','Liquor mart','Car expenses','Cloth','Education','Variety items','Gasoline','Superstore','Subscriptions','Winners','Mobile&Internet','Costco','Walmart','Amazon','Canada travel','International travel','Ski','Entertainment','Medicine','University','Other','Split expences','Electronics','Rent','Utilities','Transfer to Scotia','Transfer to Wise','Dani transfer','Investments','Liubov transfer','Taxi','Split app'];
+var FCATS=['Salary','Other income','Liubov transfer','Initial balance 2025'];
+var ALLCATS={};
+CATS.forEach(function(c){ALLCATS[c]=true});FCATS.forEach(function(c){ALLCATS[c]=true});
 var spentData=[],fundingData=[];
+var spentFilter='',fundingFilter='';
 
 async function process(){
  var st=document.getElementById('status');
@@ -79,36 +85,62 @@ async function process(){
  }catch(e){st.innerHTML='Error: '+e.message}
 }
 
+function cc(type,i,v){
+ var d=type==='spent'?spentData:fundingData;if(d[i].Category===v)return;
+ d[i].Category=v;
+ fetch('/save_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:d[i]['Transaction Details'].substring(0,60).trim(),category:v})}).catch(function(){});
+ rt(type,d)
+}
+
+function rr(type,i){
+ var d=type==='spent'?spentData:fundingData;d.splice(i,1);rt(type,d)
+}
+
 function rt(type,data){
- var el=document.getElementById('t-'+type),cols=['Bank','Date','Transaction Details','Category','Amount'];
+ var el=document.getElementById('t-'+type);
+ var activeFilter=type==='spent'?spentFilter:fundingFilter;
+ var cols=['Bank','Date','Transaction Details','Category','Amount'];
  var cats=type==='spent'?CATS:FCATS;
- if(!data.length){el.innerHTML='<p class="in">No data.</p>';return}
- var h='<div class="tw"><table><thead><tr>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'<th></th></tr></thead><tbody>';
- data.forEach(function(r,i){
+ 
+ // Sort: new transactions first, master rows last
+ data.sort(function(a,b){return (a._master?1:0)-(b._master?1:0)});
+ 
+ // Filter
+ var filtered=activeFilter?data.filter(function(r){return r.Category===activeFilter}):data;
+ 
+ // Build filter dropdown
+ var filterOpts='<option value="">All categories</option>';
+ cats.forEach(function(c){
+  var count=data.filter(function(r){return r.Category===c}).length;
+  filterOpts+='<option value="'+c+'"'+(activeFilter===c?' selected':'')+'>'+c+' ('+count+')</option>';
+ });
+ 
+ if(!filtered.length){el.innerHTML='<div class="flt"><span>Filter: </span><select onchange="setF(\''+type+'\',this.value)">'+filterOpts+'</select></div><p class="in">No data matching filter.</p>';return}
+ 
+ var h='<div class="flt"><span>Filter: </span><select onchange="setF(\''+type+'\',this.value)">'+filterOpts+'</select><span style="font-size:12px;color:#666;">'+filtered.length+' rows shown</span></div>';
+ h+='<div class="tw"><table><thead><tr>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'<th></th></tr></thead><tbody>';
+ filtered.forEach(function(r,i){
+  // Find original index
+  var origIdx=data.indexOf(r);
   var isMaster=r._master===true;
   h+='<tr class="'+(isMaster?'tm':'')+'">';
   cols.forEach(function(c){
    if(c==='Category'){
     if(isMaster){h+='<td>'+(r[c]||'')+' <span class="bd bdm">master</span></td>'}
-    else{h+='<td class="cs"><select onchange="cc(\''+type+'\','+i+',this.value)">'+cats.map(function(cat){return '<option value="'+cat+'"'+(r[c]===cat?' selected':'')+'>'+cat+'</option>'}).join('')+'</select></td>'}
+    else{h+='<td class="cs"><select onchange="cc(\''+type+'\','+origIdx+',this.value)">'+cats.map(function(cat){return '<option value="'+cat+'"'+(r[c]===cat?' selected':'')+'>'+cat+'</option>'}).join('')+'</select></td>'}
    }else if(c==='Amount'){h+='<td>'+(r[c]!==undefined?Number(r[c]).toFixed(2):'')+'</td>'}
    else{h+='<td>'+(r[c]||'')+'</td>'}
   });
-  h+='<td>'+(isMaster?'':'<button class="br" style="padding:2px 8px;font-size:12px;" onclick="rr(\''+type+'\','+i+')">✕</button>')+'</td></tr>'
+  h+='<td>'+(isMaster?'':'<button class="br" style="padding:2px 8px;font-size:12px;" onclick="rr(\''+type+'\','+origIdx+')">✕</button>')+'</td></tr>'
  });
  h+='</tbody></table></div>';el.innerHTML=h
 }
 
-async function cc(type,i,v){
- var d=type==='spent'?spentData:fundingData;if(d[i].Category===v)return;
- d[i].Category=v;rt(type,d);
- var det=d[i]['Transaction Details']||'';
- if(det.length>5&&!d[i]._master){
-  try{await fetch('/save_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:det.substring(0,60).trim(),category:v})})}
-  catch(e){}
- }
+function setF(type,val){
+ if(type==='spent')spentFilter=val;else fundingFilter=val;
+ rt(type,type==='spent'?spentData:fundingData)
 }
-function rr(type,i){var d=type==='spent'?spentData:fundingData;d.splice(i,1);rt(type,d)}
+
 function dl(type){
  var d=type==='spent'?spentData:fundingData,cols=['Bank','Date','Transaction Details','Category','Amount'];
  var csv=cols.join(',')+'\n';

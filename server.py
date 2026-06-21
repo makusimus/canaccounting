@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """CanAccounting Processor Backend v2"""
-import csv, os, json, sys
+import csv, os, json, sys, re
 from datetime import datetime
 from collections import Counter
 from http.server import HTTPServer, BaseHTTPRequestHandler
+try:
+    import openpyxl
+    HAVE_OPENPYXL = True
+except ImportError:
+    HAVE_OPENPYXL = False
 # replaced cgi import
 
 # ==================== LOGIC ====================
@@ -83,18 +88,41 @@ def catf(details, rules, overrides={}):
     return None
 
 def parse_csv(text):
-    lines=text.strip().split('\n')
+    # Tolerant CSV parser — handles quoted commas and unquoted newlines
+    import io
+    lines = text.strip().splitlines()
     if not lines: return []
-    h=[x.strip().strip('"') for x in lines[0].split(',')]
-    rows=[]
+    h = [x.strip().strip('"') for x in next(csv.reader([lines[0]]))]
+    rows = []
     for line in lines[1:]:
         if not line.strip(): continue
-        vals=line.split(',')
-        row={}
-        for i,k in enumerate(h):
-            row[k]=vals[i].strip().strip('"') if i<len(vals) else ''
+        # Use csv.reader per-line to avoid newline-in-unquoted-field errors
+        vals = next(csv.reader([line]), [])
+        if not vals: continue
+        row = {}
+        for i, k in enumerate(h):
+            row[k] = vals[i].strip().strip('"') if i < len(vals) else ''
         rows.append(row)
     return rows
+
+def parse_xlsx(raw_bytes, sheet_idx=0):
+    """Parse an xlsx file from raw bytes into dict rows."""
+    if not HAVE_OPENPYXL: return [], ['openpyxl not installed — install with: pip3 install openpyxl']
+    import io
+    wb = openpyxl.load_workbook(io.BytesIO(raw_bytes), read_only=True, data_only=True)
+    ws = wb.worksheets[sheet_idx]
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows: return [], []
+    headers = [str(h).strip() if h else '' for h in rows[0]]
+    result = []
+    for row in rows[1:]:
+        if not row or all(c is None or (isinstance(c, str) and c.strip() == '') for c in row): continue
+        d = {}
+        for i, h in enumerate(headers):
+            val = row[i] if i < len(row) and row[i] is not None else ''
+            d[h] = str(val).strip()
+        result.append(d)
+    return result, []
 
 def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
     overrides = load_overrides()
@@ -123,7 +151,14 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
         elif 'scotia' in fn and 'credit' in fn: bt='scotia-credit'
         else: continue
         
-        rows=parse_csv(text)
+        if isinstance(text, bytes):
+            # xlsx file
+            rows, errs = parse_xlsx(text)
+            if errs:
+                for e in errs: print(f'xlsx error: {e}', flush=True)
+                continue
+        else:
+            rows=parse_csv(text)
         if not rows: continue
         bn={'simplii-debit':'Simplii Debit','simplii-credit':'Simplii Credit','scotia-debit':'Scotia Debit','scotia-credit':'Scotia Credit','rogers-credit':'Rogers Credit'}[bt]
         
@@ -171,7 +206,11 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
             for row in rows:
                 keys=list(row.keys())
                 det=str(row.get('Description','') or row.get('Merchant Name','') or (row[keys[1]] if len(keys)>1 else '')).strip()
-                d=nd(str(row.get('Date','')));amt_field=row.get('Amount','') or (row[keys[3]] if len(keys)>3 else '')
+                # Rogers CSV has no header row — first data row becomes keys, so use fallback by column index
+                # Rogers CSV is headerless — first column is the date, read by column index
+                date_raw = row.get('Date','') or (row.get(keys[0],'') if len(keys)>0 else '')
+                d=nd(str(date_raw))
+                amt_field=row.get('Amount','') or (row[keys[3]] if len(keys)>3 else '')
                 amt=pa(amt_field)
                 if amt is None: continue
                 if 'payment, thank you' in det.lower(): excl+=1; continue
@@ -180,86 +219,6 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
     spent.sort(key=lambda t:t.get('Date','') or '')
     funding.sort(key=lambda t:t.get('Date','') or '')
     return spent, funding, excl
-
-# ==================== HTTP SERVER ====================
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == '/':
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/html; charset=utf-8')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            with open(os.path.join(ROOT, 'index.html'), 'rb') as f:
-                self.wfile.write(f.read())
-        elif self.path == '/overrides':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(load_overrides()).encode())
-        else:
-            self.send_response(404); self.end_headers()
-    
-    def do_POST(self):
-        if self.path == '/process':
-            form = parse_multipart(self.rfile, self.headers)
-            files_data = {}
-            master_spent = master_funding = None
-            for field_name, data in form.items():
-                if isinstance(data, bytes):
-                    decoded = data.decode('utf-8', errors='replace')
-                    if field_name == 'masterSpent': master_spent = decoded
-                    elif field_name == 'masterFunding': master_funding = decoded
-                    else: files_data[field_name] = decoded
-            spent, funding, excl = process_all(files_data, master_spent, master_funding)
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                'spent': spent, 'funding': funding, 'excluded': excl,
-                'overrides': load_overrides()
-            }).encode())
-        
-        elif self.path == '/save_override':
-            length = int(self.headers.get('Content-Length', 0))
-            data = json.loads(self.rfile.read(length).decode('utf-8'))
-            ov = load_overrides()
-            ov[data['pattern']] = data['category']
-            save_overrides(ov)
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({'ok': True, 'count': len(ov)}).encode())
-        
-        elif self.path == '/delete_override':
-            length = int(self.headers.get('Content-Length', 0))
-            data = json.loads(self.rfile.read(length).decode('utf-8'))
-            ov = load_overrides()
-            ov.pop(data['pattern'], None)
-            save_overrides(ov)
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({'ok': True, 'count': len(ov)}).encode())
-        
-        elif self.path == '/clear_overrides':
-            save_overrides({})
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({'ok': True}).encode())
-
-if __name__ == '__main__':
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
-    server = HTTPServer(('127.0.0.1', port), Handler)
-    print(f'CanAccounting server on http://127.0.0.1:{port}')
-    print(f'Overrides stored in: {OVERRIDE_FILE}')
-    server.serve_forever()
-import re, sys
 
 def parse_multipart(rfile, headers):
     """Parse multipart/form-data without cgi module"""
@@ -290,3 +249,102 @@ def parse_multipart(rfile, headers):
         else:
             result[field_name] = data.decode('utf-8', errors='replace')
     return result
+
+# ==================== HTTP SERVER ====================
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            with open(os.path.join(ROOT, 'index.html'), 'rb') as f:
+                self.wfile.write(f.read())
+        elif self.path == '/overrides':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(load_overrides()).encode())
+        else:
+            self.send_response(404); self.end_headers()
+    
+    def do_POST(self):
+        try:
+            if self.path == '/process':
+                form = parse_multipart(self.rfile, self.headers)
+                files_data = {}
+                master_spent = master_funding = None
+                for field_name, data in form.items():
+                    if isinstance(data, bytes):
+                        if field_name.endswith('.xlsx'):
+                            # Keep xlsx as raw bytes
+                            files_data[field_name] = data
+                        else:
+                            decoded = data.decode('utf-8', errors='replace')
+                            if field_name == 'masterSpent': master_spent = decoded
+                            elif field_name == 'masterFunding': master_funding = decoded
+                            else: files_data[field_name] = decoded
+                spent, funding, excl = process_all(files_data, master_spent, master_funding)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'spent': spent, 'funding': funding, 'excluded': excl,
+                    'overrides': load_overrides()
+                }).encode())
+            
+            elif self.path == '/save_override':
+                length = int(self.headers.get('Content-Length', 0))
+                data = json.loads(self.rfile.read(length).decode('utf-8'))
+                ov = load_overrides()
+                ov[data['pattern']] = data['category']
+                save_overrides(ov)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'ok': True, 'count': len(ov)}).encode())
+            
+            elif self.path == '/delete_override':
+                length = int(self.headers.get('Content-Length', 0))
+                data = json.loads(self.rfile.read(length).decode('utf-8'))
+                ov = load_overrides()
+                ov.pop(data['pattern'], None)
+                save_overrides(ov)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'ok': True, 'count': len(ov)}).encode())
+            
+            elif self.path == '/clear_overrides':
+                save_overrides({})
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'ok': True}).encode())
+            
+            else:
+                self.send_response(404); self.end_headers(); self.wfile.write(b'{"error":"not found"}')
+        
+        except Exception as e:
+            import traceback
+            err_msg = traceback.format_exc()
+            print(f'ERROR in do_POST: {err_msg}', flush=True)
+            try:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+            except: pass
+
+if __name__ == '__main__':
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
+    server = HTTPServer(('127.0.0.1', port), Handler)
+    print(f'CanAccounting server on http://127.0.0.1:{port}')
+    print(f'Overrides stored in: {OVERRIDE_FILE}')
+    server.serve_forever()
