@@ -68,7 +68,7 @@ def save_overrides(ov):
 
 def nd(d):
     d=str(d).strip().strip('"')
-    for f in ['%Y-%m-%d','%m/%d/%Y','%m/%d/%y','%b %d,%Y','%b %d,%y','%b %d, %Y','%b %d, %y','%B %d,%Y','%B %d,%y']:
+    for f in ['%Y-%m-%d','%m/%d/%Y','%m/%d/%y','%b %d,%Y','%b %d,%y','%b %d, %Y','%b %d, %y','%B %d,%Y','%B %d,%y','%d-%b-%y','%d-%b-%Y','%d-%B-%y','%d-%B-%Y']:
         try: return datetime.strptime(d,f).strftime('%Y-%m-%d')
         except: pass
     return d[:10]
@@ -126,7 +126,7 @@ def parse_xlsx(raw_bytes, sheet_idx=0):
 
 def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
     overrides = load_overrides()
-    spent, funding, excl = [], [], 0
+    spent, funding, excluded = [], [], []
     
     def adds(b,d,det,a):
         c=catf(det,SR,overrides) or 'Other'
@@ -134,6 +134,8 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
     def addf(b,d,det,a):
         c=catf(det,FR,overrides) or 'Other income'
         funding.append({'Bank':b,'Date':d,'Transaction Details':det,'Category':c,'Amount':a})
+    def adde(b,d,det,a,r):
+        excluded.append({'Bank':b,'Date':d,'Transaction Details':det,'Amount':a,'Reason':r})
     
     if master_spent_csv:
         for r in parse_csv(master_spent_csv):
@@ -167,10 +169,10 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
                 d=nd(row.get('Date',''));det=(row.get('Transaction Details','') or row.get('Description','')).strip()
                 out=pa(row.get('Funds Out',''));inn=pa(row.get('Funds In',''))
                 if out:
-                    if any(k in det.upper() for k in ['VISA SIMPLII','MASTERCARD ROGERS','FULFILL REQ MAKSYM']): excl+=1; continue
+                    if any(k in det.upper() for k in ['VISA SIMPLII','MASTERCARD ROGERS','FULFILL REQ MAKSYM']): adde('Simplii Debit',d,det,out,'CC payment transfer'); continue
                     adds('Simplii Debit',d,det,out)
                 if inn:
-                    if 'RECEIVE MAKSYM' in det.upper(): excl+=1; continue
+                    if 'RECEIVE MAKSYM' in det.upper(): adde('Simplii Debit',d,det,inn,'Transfer from self'); continue
                     if 'RETAIL PURCHASE RETURN COSTCO' in det.upper(): adds('Simplii Debit',d,det,-inn)
                     elif catf(det,FR): addf('Simplii Debit',d,det,inn)
                     else: addf('Simplii Debit',d,det,inn)
@@ -181,7 +183,7 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
                 out=pa(row.get('Funds Out',''));inn=pa(row.get('Funds In',''))
                 card=str(row.get('Credit Card','') or row.get(' Credit Card ','') or '').strip()
                 sfx=f' | Card *{card[-4:]}' if len(card)>=4 else ''
-                if 'PAYMENT THANK' in det.upper() or 'PAIEMENT' in det.upper(): excl+=1; continue
+                if 'PAYMENT THANK' in det.upper() or 'PAIEMENT' in det.upper(): adde('Simplii Credit',d,det,abs(out or inn or 0),'Payment received'); continue
                 if out: adds('Simplii Credit',d,det+sfx,out)
                 if inn: adds('Simplii Credit',d,det+sfx,-inn)
         
@@ -190,7 +192,7 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
                 desc=str(row.get('Description',''));sub=str(row.get('Sub-description',''))
                 det=f'{desc} — {sub}'.strip();d=nd(str(row.get('Date','')));amt=pa(str(row.get('Amount','')))
                 if amt is None: continue
-                if any(k in det.upper() for k in ['PEMBINA TRAILS','CUSTOMER TRANSFER DR','MB-CREDIT CARD','LOC PAY']): excl+=1; continue
+                if any(k in det.upper() for k in ['PEMBINA TRAILS','CUSTOMER TRANSFER DR','MB-CREDIT CARD','LOC PAY']): adde('Scotia Debit',d,det,abs(amt),'Internal transfer/payment'); continue
                 if amt<0: adds('Scotia Debit',d,det,abs(amt))
                 else: addf('Scotia Debit',d,det,amt)
         
@@ -199,7 +201,7 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
                 desc=str(row.get('Description',''));sub=str(row.get('Sub-description',''))
                 det=f'{desc} — {sub}'.strip();d=nd(str(row.get('Date','')));amt=pa(str(row.get('Amount','')))
                 if amt is None: continue
-                if 'payment from -' in det.lower(): excl+=1; continue
+                if 'payment from -' in det.lower(): adde('Scotia Credit',d,det,abs(amt),'Payment received'); continue
                 adds('Scotia Credit',d,det,abs(amt))
         
         elif bt=='rogers-credit':
@@ -213,12 +215,12 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
                 amt_field=row.get('Amount','') or (row[keys[3]] if len(keys)>3 else '')
                 amt=pa(amt_field)
                 if amt is None: continue
-                if 'payment, thank you' in det.lower(): excl+=1; continue
+                if 'payment, thank you' in det.lower(): adde('Rogers Credit',d,det,abs(amt),'Payment received'); continue
                 adds('Rogers Credit',d,det,abs(amt))
     
     spent.sort(key=lambda t:t.get('Date','') or '')
     funding.sort(key=lambda t:t.get('Date','') or '')
-    return spent, funding, excl
+    return spent, funding, excluded
 
 def parse_multipart(rfile, headers):
     """Parse multipart/form-data without cgi module"""
