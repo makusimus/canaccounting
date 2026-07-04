@@ -170,6 +170,8 @@ def process_all(files_data, master_spent_csv=None, master_funding_csv=None):
                 out=pa(row.get('Funds Out',''));inn=pa(row.get('Funds In',''))
                 if out:
                     if any(k in det.upper() for k in ['VISA SIMPLII','MASTERCARD ROGERS','FULFILL REQ MAKSYM']): adde('Simplii Debit',d,det,out,'CC payment transfer'); continue
+                    # Catch any other INTERNET BILL PAYMENT that isn't university (catches other CC payments like Scotia Credit)
+                    if 'INTERNET BILL PAYMENT' in det.upper() and 'UNIVERSITY' not in det.upper(): adde('Simplii Debit',d,det,out,'CC payment transfer'); continue
                     adds('Simplii Debit',d,det,out)
                 if inn:
                     if 'RECEIVE MAKSYM' in det.upper(): adde('Simplii Debit',d,det,inn,'Transfer from self'); continue

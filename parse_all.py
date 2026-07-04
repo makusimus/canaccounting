@@ -128,6 +128,7 @@ def process_files(files_data, master_spent_csv=None, master_funding_csv=None):
                 out=pa(row.get('Funds Out',''));inn=pa(row.get('Funds In',''))
                 if out:
                     if any(k in det.upper() for k in ['VISA SIMPLII','MASTERCARD ROGERS','FULFILL REQ MAKSYM']): excl+=1; continue
+                    if 'INTERNET BILL PAYMENT' in det.upper() and 'UNIVERSITY' not in det.upper(): excl+=1; continue
                     adds('Simplii Debit',d,det,out)
                 if inn:
                     if 'RECEIVE MAKSYM' in det.upper(): excl+=1; continue
