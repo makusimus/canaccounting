@@ -1,0 +1,78 @@
+Africa|University of KwaZulu-Natal
+Australia|Curtin University
+Australia|Edith Cowan University
+Australia|Flinders University
+Australia|Macquarie University
+Australia|Queensland University of Technology
+Australia|University of Newcastle
+Australia|University of Western Sydney
+Australia|University of Wollongong
+Austria|TU Graz
+Austria|TU Vienna
+Caribbean|The National Student Exchange Program
+China|Xi'an Jiaotong-Liverpool University
+Czechia|Charles University in Prague
+Denmark|Aarhus University
+Denmark|University of Southern Denmark
+Finland|Aalto University
+Finland|University of Helsinki
+France|CPE Lyon
+France|Sorbonne Université
+France|UniLaSalle
+France|University of Tours (Université François-Rabelais)&nbsp;
+France|Université Grenoble Alpes
+France|Université Paul Sabatier
+France|Université de Bourgogne
+France|Université de Paris-Saclay
+Germany|LMU Munich
+Germany|Leibniz University Hannover
+Germany|Technische Universität Berlin
+Germany|University of Oldenburg
+Germany|University of Stuttgart
+Germany|University of Würzburg
+Germany|Universität Hamburg
+Germany|Universität Jena
+Greenland|Ilisimatusarfik
+Hong Kong SAR|Chinese University of Hong Kong
+Hong Kong SAR|Hong Kong Polytechnic University
+Italy|Università di Bologna
+Japan|Nagasaki University
+Japan|Ryukoku University
+Japan|Soka University
+Japan|Waseda University
+Netherlands|Erasmus University Rotterdam
+Netherlands|University of Groningen
+North America|ITESM/Tecnológico de Monterrey
+North America|The Washington Center Internship Program
+North America|Universidad Nacional Autónoma de México
+Norway|Arctic University of Norway
+Singapore|Nanyang Technological University
+Singapore|National University of Singapore
+South America|Pontificia Universidad Católica de Valparaíso
+South America|Pontifícia Universidad Católica del Perú
+South America|USFQ Galapagos Island Program
+South America|Universidad Externado de Colombia
+South America|Universidad de San Francisco de Quito (USFQ)
+South America|Universidad del Salvador
+South America|Universidade Federal de Santa Catarina
+South Korea|Seoul National University
+South Korea|University of Seoul
+Spain|Universidad Complutense de Madrid
+Spain|Universidad del Pais Vasco, Basque Country
+Sweden|Lund University
+Sweden|Umeå University
+Sweden|Örebro University
+Switzerland|University of Lucerne
+United Kingdom and Ireland|Lancaster University
+United Kingdom and Ireland|Newcastle University
+United Kingdom and Ireland|Oxford Brookes University
+United Kingdom and Ireland|University of Chichester
+United Kingdom and Ireland|University of East Anglia
+United Kingdom and Ireland|University of Edinburgh
+United Kingdom and Ireland|University of Kent
+United Kingdom and Ireland|University of Leicester
+United Kingdom and Ireland|University of Limerick
+United Kingdom and Ireland|University of Liverpool
+United Kingdom and Ireland|University of Manchester
+United Kingdom and Ireland|University of Sheffield
+Virtual/Online|Norwegian School of Sport Sciences
