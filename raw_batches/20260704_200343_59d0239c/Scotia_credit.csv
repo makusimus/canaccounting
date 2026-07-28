@@ -1,0 +1,11 @@
+﻿Filter,Date,Description,Sub-description,Status,Type of Transaction,Amount
+"Custom filters (select dates and amounts), From date=2026-04-01, To date=2026-06-30","2026-05-23","cibc","Toronto","posted","Credit","-8.00"
+"","2026-05-17","lyft","Vancouver Bc","posted","Debit","8.00"
+"","2026-05-07","cibc","Toronto","posted","Credit","-17.90"
+"","2026-04-27","lyft","Vancouver Bc","posted","Debit","19.96"
+"","2026-04-22","temu","Www. Bc","posted","Debit","54.49"
+"","2026-04-22","adidas","855-8234327 On","posted","Credit","-65.51"
+"","2026-04-20","lyft","Vancouver Bc","posted","Debit","8.96"
+"","2026-04-11","cibc","Toronto","posted","Credit","-9.96"
+"","2026-04-07","lyft","Vancouver Bc","posted","Debit","9.96"
+"","2026-04-01","cibc","Toronto","posted","Credit","-37.31"

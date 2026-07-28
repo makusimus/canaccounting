@@ -3,7 +3,7 @@
   "JYSK SOLIN 60.00 EUR @ 1.656166 | Card *4418": "Split app",
   "IKEA HR ecom Sesvete Kralj 288.94 EUR @ 1.657714 | Card *441": "Split app",
   "IKEA HRVATSKA P.J. 111 Split 4.99 EUR @ 1.679358 | Card *441": "Split app",
-  "blessed cleaners": "Cloth",
+  "blessed cleaners": "Other",
   "famous player 2402qps": "Variety items",
   "mb electrical museum": "Entertainment",
   "aliexpress": "Variety items",
@@ -46,5 +46,6 @@
   "EB GAMES 859 WINNIPEG, MB | Card *4079": "Electronics",
   "amzn digital*p714y56n3": "Subscriptions",
   "FAMOUS PLAYER 2402QPS WINNIPEG, MB | Card *4079": "Variety items",
-  "withdrawal \u2014 Free Interac E-Transfer": "Other"
+  "withdrawal \u2014 Free Interac E-Transfer": "Other",
+  "Amazon.ca Prime Member amazon.ca/pri, BC | Card *4079": "Subscriptions"
 }

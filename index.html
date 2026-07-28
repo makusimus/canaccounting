@@ -1,217 +1,522 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>CanAccounting</title>
 <style>
-*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;max-width:1100px;margin:40px auto;padding:0 20px;background:#f5f5f5}
+*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;max-width:1200px;margin:40px auto;padding:0 20px;background:#f5f5f5}
 .card{background:#fff;padding:24px;border-radius:8px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .flex{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.flex>div{flex:1;min-width:160px}
 label{display:block;margin:8px 0 4px;font-weight:600;color:#555;font-size:13px}
 input[type=file],select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px}
 button{padding:10px 20px;border-radius:4px;cursor:pointer;border:none;font-size:14px}
-.bp{background:#2563eb;color:#fff}.bg{background:#16a34a;color:#fff}.br{background:#dc2626;color:#fff}
+button:disabled{opacity:.5;cursor:default}
+.bp{background:#2563eb;color:#fff}.bg{background:#16a34a;color:#fff}.br{background:#dc2626;color:#fff}.by{background:#d97706;color:#fff}.bgr{background:#6b7280;color:#fff}
 .in{color:#666;font-size:13px;margin:4px 0}
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .sb{background:#f0f0f0;padding:12px;border-radius:6px;text-align:center}
 .sb .n{font-size:24px;font-weight:700;color:#2563eb}.sb .l{font-size:12px;color:#666}
-.tw{overflow-x:auto;max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px}
+.tw{overflow-x:auto;max-height:550px;overflow-y:auto;border:1px solid #ddd;border-radius:6px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:#f0f0f0;position:sticky;top:0;padding:8px 6px;text-align:left;border-bottom:2px solid #ddd;white-space:nowrap}
 td{padding:4px 6px;border-bottom:1px solid #eee}
-.tm{opacity:.5;background:#f5f5f5;font-style:italic;color:#999}
 .cs select{width:140px;padding:2px 4px;font-size:12px;border:1px solid #2563eb;border-radius:3px}
-.bd{display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px}
-.bdm{background:#e0e0e0;color:#666;font-size:10px}.bdo{background:#fef3c7;color:#d97706}
 .ta{display:flex;border-bottom:2px solid #ddd;margin-bottom:16px}
-.tb{padding:8px 20px;cursor:pointer;font-size:14px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;border-top:none;border-left:none;border-right:none;background:none}
+.tb{padding:8px 20px;cursor:pointer;font-size:14px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;border-top:none;border-left:none;border-right:none;background:none;white-space:nowrap}
 .tb.a{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
 .tc{display:none}.tc.a{display:block}
 .flt{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
 .flt select{width:160px;padding:4px;font-size:12px}
+.ms{color:#059669;font-size:13px;margin-top:8px;padding:8px 12px;background:#ecfdf5;border-radius:6px;display:none}
+.me{color:#dc2626;font-size:13px;margin-top:8px;padding:8px 12px;background:#fef2f2;border-radius:6px;display:none}
+.bs{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase}
+.bs-u{background:#dbeafe;color:#2563eb}.bs-c{background:#fef3c7;color:#d97706}.bs-r{background:#e0e7ff;color:#4338ca}.bs-p{background:#d1fae5;color:#059669}
+.bd{display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px}
+.bde{background:#fee2e2;color:#dc2626}.bdi{background:#fef3c7;color:#d97706}
+.msc{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal-c{background:#fff;border-radius:8px;padding:24px;max-width:480px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.modal-c h3{margin:0 0 12px}.modal-c input[type=text]{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:14px;margin-bottom:12px}
+.modal-c button{margin-right:8px}
+.ba{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:500}
 </style></head><body>
 <h1>🧾 CanAccounting</h1>
+
+<!-- Upload -->
 <div class="card">
   <div class="flex">
     <div><label>Bank files (.csv or .xlsx)</label><input type="file" id="files" accept=".csv,.xlsx" multiple></div>
-    <div><label>Spent.csv (master)</label><input type="file" id="ms" accept=".csv"></div>
-    <div><label>Funding.csv (master)</label><input type="file" id="mf" accept=".csv"></div>
   </div>
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-    <button class="bg" onclick="process()" style="font-size:16px;padding:12px 28px;">🚀 Process</button>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <button class="bg" onclick="doUpload()">📤 Upload</button>
+    <span id="uploadStatus" class="in"></span>
   </div>
-  <div id="status" class="in" style="margin-top:8px;"></div>
 </div>
-<div id="results" style="display:none;">
+
+<!-- Active batch -->
+<div id="batchArea" style="display:none;">
+  <div class="card">
+    <div class="msc">
+      <div><strong>Batch:</strong> <span id="batchIdDisplay"></span> <span id="batchStatusBadge"></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="bp" onclick="doCategorize()" id="catBtn">🏷️ Categorize</button>
+        <button class="by" onclick="doProcess()" id="procBtn" disabled>✅ Process</button>
+        <button class="bgr" onclick="doDeleteBatch()">🗑️ Discard</button>
+      </div>
+    </div>
+    <div id="categorizeStatus" class="in"></div>
+  </div>
+  
+  <!-- Summaries -->
   <div class="card"><div class="sg" id="sg"></div></div>
+  
+  <!-- Review tables -->
   <div class="card">
     <div class="ta">
       <button class="tb a" onclick="st('spent',this)">📊 Spent</button>
       <button class="tb" onclick="st('funding',this)">💰 Funding</button>
-      <button class="tb" onclick="st('excluded',this);rexcluded()">🚫 Excluded</button>
-      <button class="tb" onclick="st('overrides',this);roverrides()">⚙️ Overrides</button>
+      <button class="tb" onclick="st('excluded',this);rtExcluded()">🚫 Excluded</button>
+      <button class="tb" onclick="st('overrides',this);loadOverrides()">⚙️ Overrides</button>
     </div>
     <div id="t-spent" class="tc a"></div>
     <div id="t-funding" class="tc"></div>
     <div id="t-excluded" class="tc"></div>
     <div id="t-overrides" class="tc"></div>
-    <div style="margin-top:12px;">
-      <button class="bg" onclick="dl('spent')">⬇ Spent.csv</button>
-      <button class="bg" onclick="dl('funding')">⬇ Funding.csv</button>
+  </div>
+</div>
+
+<!-- Stats & Export -->
+<div class="card">
+  <div class="msc">
+    <div><strong>📊 Database</strong></div>
+    <div style="display:flex;gap:8px;">
+      <button class="bg" onclick="doExport('spent')">⬇ Spent.csv</button>
+      <button class="bg" onclick="doExport('funding')">⬇ Funding.csv</button>
+    </div>
+  </div>
+  <div id="dbStats"></div>
+</div>
+
+<div id="msg" class="ms"></div>
+<div id="err" class="me"></div>
+
+<div id="excludeModal" class="modal" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal-c">
+    <h3>🚫 Reason for exclusion</h3>
+    <p class="in" id="excludeTxPreview"></p>
+    <input type="text" id="excludeReason" placeholder="e.g. CC payment transfer, duplicate, refund...">
+    <div>
+      <button class="br" onclick="confirmExclude()">Exclude</button>
+      <button onclick="closeModal()">Cancel</button>
     </div>
   </div>
 </div>
+
+<div id="dupModal" class="modal" style="display:none;" onclick="if(event.target===this)closeDupModal()">
+  <div class="modal-c" style="max-width:700px;">
+    <h3>⚠️ Duplicates detected</h3>
+    <p id="dupMsg" class="in"></p>
+    <div id="dupList" style="max-height:300px;overflow-y:auto;margin:8px 0;border:1px solid #ddd;border-radius:4px;"></div>
+    <p class="in">These transactions are already in the database. You can upload anyway (duplicates will be marked as excluded) or cancel.</p>
+    <div>
+      <button class="bg" onclick="confirmDupUpload()">Upload anyway</button>
+      <button class="br" onclick="cancelDupUpload()">Cancel upload</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var CATS=['Outside dining','Sport and recreation','Freshco','Liquor mart','Car expenses','Cloth','Education','Variety items','Gasoline','Superstore','Subscriptions','Winners','Mobile&Internet','Costco','Walmart','Amazon','Canada travel','International travel','Ski','Entertainment','Medicine','University','Other','Split expences','Electronics','Rent','Utilities','Transfer to Scotia','Transfer to Wise','Dani transfer','Investments','Liubov transfer','Taxi','Split app'];
 var FCATS=['Salary','Other income','Liubov transfer','Initial balance 2025'];
-var ALLCATS={};
-CATS.forEach(function(c){ALLCATS[c]=true});FCATS.forEach(function(c){ALLCATS[c]=true});
-var spentData=[],fundingData=[],excludedData=[],overridesData={};
+var ALLCATS={};CATS.forEach(function(c){ALLCATS[c]=true});FCATS.forEach(function(c){ALLCATS[c]=true});
+
+var currentBatch = null;
+var batchSpent = [];
+var batchFunding = [];
+var batchExcluded = [];
+var pendingExcludeId = null;
 var spentFilter='',fundingFilter='',spentBankFilter='',fundingBankFilter='';
 
-async function process(){
- var st=document.getElementById('status');
+function msg(t){var e=document.getElementById('msg');e.textContent=t;e.style.display='block';setTimeout(function(){e.style.display='none'},5000)}
+function err(t){var e=document.getElementById('err');e.textContent=t;e.style.display='block';setTimeout(function(){e.style.display='none'},8000)}
+
+function badge(status){
+ var m={'uploaded':'u','categorized':'c','reviewed':'r','processed':'p'};
+ var c={'uploaded':'bs-u','categorized':'bs-c','reviewed':'bs-r','processed':'bs-p'};
+ return '<span class="bs '+c[status]+'">'+status+'</span>';
+}
+
+// ==================== UPLOAD ====================
+var pendingUploadBatch = null;
+
+async function doUpload(){
  var fi=document.getElementById('files');
- if(!fi.files.length){st.innerHTML='Select bank files first.';return}
- st.innerHTML='Sending to server...';
+ if(!fi.files.length){err('Select bank files first.');return}
+ var btn=event.target;btn.disabled=true;
+ document.getElementById('uploadStatus').textContent='Uploading...';
  var fd=new FormData();
  for(var f of fi.files)fd.append(f.name,f);
- var ms=document.getElementById('ms');if(ms.files.length)fd.append('masterSpent',ms.files[0]);
- var mf=document.getElementById('mf');if(mf.files.length)fd.append('masterFunding',mf.files[0]);
  try{
-  var r=await fetch('/process',{method:'POST',body:fd});
+  var r=await fetch('/upload',{method:'POST',body:fd});
   var d=await r.json();
-  spentData=d.spent||[];fundingData=d.funding||[];excludedData=d.excluded||[];overridesData=d.overrides||{};
-  var spNew=spentData.filter(function(r){return !r._master}).length;
-  var fuNew=fundingData.filter(function(r){return !r._master}).length;
+  if(d.error){err(d.error);btn.disabled=false;document.getElementById('uploadStatus').textContent='';return}
+  
+  if(d.duplicate_count > 0){
+   // Show duplicate warning with list, hold batch until confirmed
+   pendingUploadBatch = d;
+   document.getElementById('dupMsg').innerHTML = 
+    '<strong>' + d.duplicate_count + '</strong> of ' + d.total_rows + 
+    ' transactions already exist in the database.';
+   
+   // Render duplicate list
+   var dl = document.getElementById('dupList');
+   if(d.duplicates && d.duplicates.length > 0){
+    var h = '<table style="width:100%;font-size:12px;border-collapse:collapse;">' +
+     '<thead><tr style="background:#f5f5f5;position:sticky;top:0;">' +
+     '<th style="padding:4px 6px;text-align:left;border-bottom:1px solid #ddd;">Bank</th>' +
+     '<th style="padding:4px 6px;text-align:left;border-bottom:1px solid #ddd;">Date</th>' +
+     '<th style="padding:4px 6px;text-align:left;border-bottom:1px solid #ddd;">Description</th>' +
+     '<th style="padding:4px 6px;text-align:left;border-bottom:1px solid #ddd;">Amount</th>' +
+     '<th style="padding:4px 6px;text-align:left;border-bottom:1px solid #ddd;">DB Category</th>' +
+     '</tr></thead><tbody>';
+    d.duplicates.forEach(function(tx){
+     h += '<tr><td style="padding:3px 6px;border-bottom:1px solid #eee;">'+(tx.bank||'')+'</td>' +
+      '<td style="padding:3px 6px;border-bottom:1px solid #eee;">'+(tx.date||'')+'</td>' +
+      '<td style="padding:3px 6px;border-bottom:1px solid #eee;max-width:250px;overflow:hidden;text-overflow:ellipsis;">'+(tx.description||'')+'</td>' +
+      '<td style="padding:3px 6px;border-bottom:1px solid #eee;">$'+(tx.amount||0).toFixed(2)+'</td>' +
+      '<td style="padding:3px 6px;border-bottom:1px solid #eee;">'+(tx.existing_category||'')+'</td></tr>';
+    });
+    h += '</tbody></table>';
+    dl.innerHTML = h;
+   } else {
+    dl.innerHTML = '<p class="in">No details available.</p>';
+   }
+   
+   document.getElementById('dupModal').style.display = 'flex';
+   btn.disabled=false;
+   document.getElementById('uploadStatus').textContent='';
+   return;
+  }
+  
+  activateBatch(d);
+  fi.value='';
+ }catch(e){err('Upload error: '+e.message)}
+ btn.disabled=false;
+}
+
+function closeDupModal(){
+ document.getElementById('dupModal').style.display='none';
+}
+
+async function confirmDupUpload(){
+ closeDupModal();
+ var d = pendingUploadBatch;
+ pendingUploadBatch = null;
+ activateBatch(d);
+ document.getElementById('files').value='';
+ msg('Uploaded ' + d.file_count + ' file(s) with ' + d.duplicate_count + ' potential duplicates — check Excluded tab after categorizing.');
+}
+
+async function cancelDupUpload(){
+ closeDupModal();
+ var batchId = pendingUploadBatch.batch_id;
+ pendingUploadBatch = null;
+ try{
+  await fetch('/delete_batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({batch_id:batchId})});
+ }catch(e){}
+ document.getElementById('uploadStatus').textContent='Upload cancelled — ' + batchId;
+ document.getElementById('files').value='';
+}
+
+function activateBatch(d){
+ currentBatch = d.batch_id;
+ document.getElementById('batchIdDisplay').textContent = d.batch_id;
+ document.getElementById('batchStatusBadge').innerHTML = badge('uploaded');
+ document.getElementById('batchArea').style.display = 'block';
+ document.getElementById('sg').innerHTML = '<p class="in">Uploaded ' + d.file_count + ' file(s) (' + d.total_rows + ' rows). Click "Categorize" to process.</p>';
+ document.getElementById('t-spent').innerHTML = '';
+ document.getElementById('t-funding').innerHTML = '';
+ document.getElementById('t-excluded').innerHTML = '';
+ document.getElementById('catBtn').disabled = false;
+ document.getElementById('procBtn').disabled = true;
+ document.getElementById('uploadStatus').textContent = '✓ Uploaded — batch: ' + d.batch_id;
+ loadStats();
+}
+
+// ==================== CATEGORIZE ====================
+async function doCategorize(){
+ if(!currentBatch){err('No active batch.');return}
+ document.getElementById('categorizeStatus').textContent='Running pattern matching...';
+ document.getElementById('catBtn').disabled=true;
+ try{
+  var r=await fetch('/categorize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({batch_id:currentBatch})});
+  var d=await r.json();
+  if(d.error){err(d.error);document.getElementById('catBtn').disabled=false;document.getElementById('categorizeStatus').textContent='';return}
+  var dupInfo = d.duplicates_flagged > 0 ? ' ('+d.duplicates_flagged+' flagged as duplicates)' : '';
+  document.getElementById('categorizeStatus').textContent='✓ Categorized: '+d.spent+' spent, '+d.funding+' funding, '+d.excluded+' excluded'+dupInfo;
+  document.getElementById('batchStatusBadge').innerHTML=badge('categorized');
+  document.getElementById('procBtn').disabled=false;
+  loadBatch();
+ }catch(e){err('Categorize error: '+e.message);document.getElementById('catBtn').disabled=false}
+}
+
+// ==================== LOAD BATCH ====================
+async function loadBatch(){
+ if(!currentBatch)return;
+ try{
+  var r=await fetch('/batch/'+currentBatch);
+  var d=await r.json();
+  if(d.error){err(d.error);return}
+  
+  batchSpent=d.transactions.filter(function(t){return t.type==='spent'});
+  batchFunding=d.transactions.filter(function(t){return t.type==='funding'});
+  batchExcluded=d.transactions.filter(function(t){return t.type==='excluded'});
+  
   document.getElementById('sg').innerHTML=
-   '<div class="sb"><div class="n">'+spentData.length+'</div><div class="l">Spent <span style="font-weight:400;color:#2563eb;">('+spNew+' new)</span></div></div>'+
-   '<div class="sb"><div class="n">'+fundingData.length+'</div><div class="l">Funding <span style="font-weight:400;color:#2563eb;">('+fuNew+' new)</span></div></div>'+
-   '<div class="sb"><div class="n">'+(d.excluded?d.excluded.length:0)+'</div><div class="l">Excluded</div></div>'+
-   '<div class="sb"><div class="n">'+Object.keys(d.overrides||{}).length+'</div><div class="l">Overrides</div></div>';
-  rt('spent',spentData);rt('funding',fundingData);
-  document.getElementById('results').style.display='block';
-  st.innerHTML='Done. '+spentData.length+' spent, '+fundingData.length+' funding.';
- }catch(e){st.innerHTML='Error: '+e.message}
+   '<div class="sb"><div class="n">'+batchSpent.length+'</div><div class="l">Spent</div></div>'+
+   '<div class="sb"><div class="n">'+batchFunding.length+'</div><div class="l">Funding</div></div>'+
+   '<div class="sb"><div class="n">'+batchExcluded.length+'</div><div class="l">Excluded</div></div>';
+  
+  rtSpent();rtFunding();
+  updateBadge();
+ }catch(e){err('Load batch error: '+e.message)}
 }
 
-function cc(type,i,v){
- var d=type==='spent'?spentData:fundingData;if(d[i].Category===v)return;
- d[i].Category=v;
- fetch('/save_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:d[i]['Transaction Details'].substring(0,60).trim(),category:v})}).catch(function(){});
- rt(type,d)
+function updateBadge(){
+ var statuses=['uploaded','categorized','reviewed','processed'];
+ for(var s of statuses){
+  if(document.querySelector('.bs-'+s[0])){
+   document.getElementById('batchStatusBadge').innerHTML=badge(s);
+   break;
+  }
+ }
 }
 
-function rr(type,i){
- var d=type==='spent'?spentData:fundingData;d.splice(i,1);rt(type,d)
-}
+// ==================== RENDER TABLES ====================
+function rtSpent(){rt('spent',batchSpent,spentFilter,spentBankFilter)}
+function rtFunding(){rt('funding',batchFunding,fundingFilter,fundingBankFilter)}
 
-function rt(type,data){
+function rt(type,data,catFilter,bankFilter){
  var el=document.getElementById('t-'+type);
- var activeFilter=type==='spent'?spentFilter:fundingFilter;
- var activeBankFilter=type==='spent'?spentBankFilter:fundingBankFilter;
- var cols=['Bank','Date','Transaction Details','Category','Amount'];
  var cats=type==='spent'?CATS:FCATS;
  
- // Sort: new transactions first, master rows last
- data.sort(function(a,b){return (a._master?1:0)-(b._master?1:0)});
- 
- // Filter by category and bank
  var filtered=data;
- if(activeFilter)filtered=filtered.filter(function(r){return r.Category===activeFilter});
- if(activeBankFilter)filtered=filtered.filter(function(r){return r.Bank===activeBankFilter});
+ if(catFilter)filtered=filtered.filter(function(r){return r.category===catFilter});
+ if(bankFilter)filtered=filtered.filter(function(r){return r.bank===bankFilter});
  
- // Build category filter dropdown
+ // Category filter
  var filterOpts='<option value="">All categories</option>';
  cats.forEach(function(c){
-  var count=data.filter(function(r){return r.Category===c}).length;
-  filterOpts+='<option value="'+c+'"'+(activeFilter===c?' selected':'')+'>'+c+' ('+count+')</option>';
+  var count=data.filter(function(r){return r.category===c}).length;
+  filterOpts+='<option value="'+c+'"'+(catFilter===c?' selected':'')+'>'+c+' ('+count+')</option>';
  });
  
- // Build bank filter dropdown
+ // Bank filter
  var banks=[];
- data.forEach(function(r){if(r.Bank&&banks.indexOf(r.Bank)===-1)banks.push(r.Bank)});
+ data.forEach(function(r){if(r.bank&&banks.indexOf(r.bank)===-1)banks.push(r.bank)});
  banks.sort();
  var bankOpts='<option value="">All banks</option>';
  banks.forEach(function(b){
-  var count=data.filter(function(r){return r.Bank===b}).length;
-  bankOpts+='<option value="'+b+'"'+(activeBankFilter===b?' selected':'')+'>'+b+' ('+count+')</option>';
+  var count=data.filter(function(r){return r.bank===b}).length;
+  bankOpts+='<option value="'+b+'"'+(bankFilter===b?' selected':'')+'>'+b+' ('+count+')</option>';
  });
  
- var totalCount=data.length;
- var totalNew=data.filter(function(r){return !r._master}).length;
- var filteredNew=filtered.filter(function(r){return !r._master}).length;
- var countLabel=filtered.length+' / '+totalCount+' shown'+(filteredNew?' ('+filteredNew+' new)':'');
+ var totalLabel=filtered.length+' / '+data.length+' shown';
  
- if(!filtered.length){el.innerHTML='<div class="flt"><span>Category: </span><select onchange="setF(\''+type+'\',this.value)">'+filterOpts+'</select><span>Bank: </span><select onchange="setBankF(\''+type+'\',this.value)">'+bankOpts+'</select></div><p class="in">No data matching filter. '+countLabel+'.</p>';return}
+ if(!filtered.length){
+  el.innerHTML='<div class="flt"><span>Category: </span><select onchange="setF(\''+type+'\',this.value)">'+filterOpts+'</select><span>Bank: </span><select onchange="setBankF(\''+type+'\',this.value)">'+bankOpts+'</select><span class="in">'+totalLabel+'</span></div><p class="in">No data matching filter.</p>';
+  return;
+ }
  
- var h='<div class="flt"><span>Category: </span><select onchange="setF(\''+type+'\',this.value)">'+filterOpts+'</select><span>Bank: </span><select onchange="setBankF(\''+type+'\',this.value)">'+bankOpts+'</select><span style="font-size:12px;color:#666;">'+countLabel+'</span></div>';
- h+='<div class="tw"><table><thead><tr>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'<th></th></tr></thead><tbody>';
- filtered.forEach(function(r,i){
-  // Find original index
-  var origIdx=data.indexOf(r);
-  var isMaster=r._master===true;
-  h+='<tr class="'+(isMaster?'tm':'')+'">';
-  cols.forEach(function(c){
-   if(c==='Category'){
-    if(isMaster){h+='<td>'+(r[c]||'')+' <span class="bd bdm">master</span></td>'}
-    else{h+='<td class="cs"><select onchange="cc(\''+type+'\','+origIdx+',this.value)">'+cats.map(function(cat){return '<option value="'+cat+'"'+(r[c]===cat?' selected':'')+'>'+cat+'</option>'}).join('')+'</select></td>'}
-   }else if(c==='Amount'){h+='<td>'+(r[c]!==undefined?Number(r[c]).toFixed(2):'')+'</td>'}
-   else{h+='<td>'+(r[c]||'')+'</td>'}
-  });
-  h+='<td>'+(isMaster?'':'<button class="br" style="padding:2px 8px;font-size:12px;" onclick="rr(\''+type+'\','+origIdx+')">✕</button>')+'</td></tr>'
+ var h='<div class="flt"><span>Category: </span><select onchange="setF(\''+type+'\',this.value)">'+filterOpts+'</select><span>Bank: </span><select onchange="setBankF(\''+type+'\',this.value)">'+bankOpts+'</select><span class="in">'+totalLabel+'</span></div>';
+ h+='<div class="tw"><table><thead><tr><th>Bank</th><th>Date</th><th>Description</th><th>Category</th><th>Higher</th><th>Amount</th><th></th></tr></thead><tbody>';
+ filtered.forEach(function(r){
+  var isExcluded=r.type==='excluded';
+  h+='<tr>';
+  h+='<td>'+(r.bank||'')+'</td>';
+  h+='<td>'+(r.date||'')+'</td>';
+  h+='<td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;">'+(r.description||'')+'</td>';
+  if(isExcluded){
+   h+='<td><span class="bd bde">excluded</span></td>';
+   h+='<td></td>';
+  }else{
+   var hc=r.higher_category||(CATS.indexOf(r.category)!==-1?'Running costs':'Periodic costs');
+   h+='<td class="cs"><select onchange="changeCat('+r.id+',this.value,\''+type+'\')">'+cats.map(function(cat){return '<option value="'+cat+'"'+(r.category===cat?' selected':'')+'>'+cat+'</option>'}).join('')+'</select></td>';
+   h+='<td><span class="bd '+(hc==='Periodic costs'?'bde':'bdi')+'">'+hc+'</span></td>';
+  }
+  h+='<td>'+Math.abs(r.amount).toFixed(2)+(r.amount<0?'*':'')+'</td>';
+  if(isExcluded){
+   h+='<td><button class="br" style="padding:2px 8px;font-size:12px;" onclick="deleteTx('+r.id+')">✕</button></td>';
+  }else{
+   h+='<td><button class="br" style="padding:2px 8px;font-size:12px;" onclick="openExcludeModal('+r.id+',\''+(r.description||'').replace(/'/g,"\\'")+'\')">🚫</button></td>';
+  }
+  h+='</tr>';
+ });
+ h+='</tbody></table></div>';el.innerHTML=h
+}
+
+function rtExcluded(){
+ var el=document.getElementById('t-excluded');
+ if(!batchExcluded.length){el.innerHTML='<p class="in">No excluded transactions.</p>';return}
+ var h='<div class="tw"><table><thead><tr><th>Bank</th><th>Date</th><th>Description</th><th>Amount</th><th>Reason</th><th></th></tr></thead><tbody>';
+ batchExcluded.forEach(function(r){
+  h+='<tr><td>'+(r.bank||'')+'</td><td>'+(r.date||'')+'</td><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;">'+(r.description||'')+'</td><td>'+Math.abs(r.amount).toFixed(2)+'</td><td>'+(r.reason||'')+'</td><td><button class="br" style="padding:2px 8px;font-size:12px;" onclick="deleteTx('+r.id+')">✕</button></td></tr>'
  });
  h+='</tbody></table></div>';el.innerHTML=h
 }
 
 function setF(type,val){
- if(type==='spent')spentFilter=val;else fundingFilter=val;
- rt(type,type==='spent'?spentData:fundingData)
+ if(type==='spent'){spentFilter=val;rtSpent()}
+ else{fundingFilter=val;rtFunding()}
 }
 function setBankF(type,val){
- if(type==='spent')spentBankFilter=val;else fundingBankFilter=val;
- rt(type,type==='spent'?spentData:fundingData)
+ if(type==='spent'){spentBankFilter=val;rtSpent()}
+ else{fundingBankFilter=val;rtFunding()}
 }
 
-function dl(type){
- var d=type==='spent'?spentData:fundingData,cols=['Bank','Date','Transaction Details','Category','Amount'];
- var csv=cols.join(',')+'\n';
- d.forEach(function(r){csv+=cols.map(function(c){var v=String(r[c]||'');return v.includes(',')||v.includes('"')?'"'+v.replace(/"/g,'""')+'"':v}).join(',')+'\n'});
- var b=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');
- a.href=URL.createObjectURL(b);a.download=type==='spent'?'Spent.csv':'Funding.csv';a.click()
-}
-function rexcluded(){
- var el=document.getElementById('t-excluded');
- if(!excludedData.length){el.innerHTML='<p class="in">No excluded transactions.</p>';return}
- var cols=['Bank','Date','Transaction Details','Amount','Reason'];
- var h='<div class="tw"><table><thead><tr>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'</tr></thead><tbody>';
- excludedData.forEach(function(r){
-  h+='<tr>'+cols.map(function(c){return '<td>'+(c==='Amount'?(r[c]!==undefined?Number(r[c]).toFixed(2):''):(r[c]||''))+'</td>'}).join('')+'</tr>'
- });
- h+='</tbody></table></div>';
- el.innerHTML=h
+// ==================== EDIT ACTIONS ====================
+async function changeCat(txId,newCat,type){
+ try{
+  await fetch('/update_tx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:txId,category:newCat})});
+  // Also save as override for future auto-categorization
+  var tx=dataFind(txId);
+  if(tx && tx.description){
+   var pattern=tx.description.substring(0,60).trim();
+   await fetch('/save_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:pattern,category:newCat})});
+  }
+ }catch(e){err('Error updating: '+e.message)}
 }
 
-function roverrides(){
+async function openExcludeModal(txId,desc){
+ pendingExcludeId=txId;
+ document.getElementById('excludeTxPreview').textContent=desc;
+ document.getElementById('excludeReason').value='';
+ document.getElementById('excludeModal').style.display='flex';
+}
+
+function closeModal(){
+ document.getElementById('excludeModal').style.display='none';
+ pendingExcludeId=null;
+}
+
+async function confirmExclude(){
+ if(!pendingExcludeId){closeModal();return}
+ var reason=document.getElementById('excludeReason').value.trim()||'Manual exclusion';
+ try{
+  await fetch('/update_tx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pendingExcludeId,type:'excluded',reason:reason})});
+  closeModal();
+  loadBatch();
+  msg('Transaction excluded'+(reason?': '+reason:''));
+ }catch(e){err('Error: '+e.message);closeModal()}
+}
+
+async function deleteTx(txId){
+ if(!confirm('Delete this transaction?'))return;
+ try{
+  // Change type to excluded with reason
+  await fetch('/update_tx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:txId,type:'excluded',reason:'Deleted during review'})});
+  loadBatch();
+ }catch(e){err('Error: '+e.message)}
+}
+
+function dataFind(txId){
+ for(var arr of [batchSpent,batchFunding,batchExcluded]){
+  for(var tx of arr){if(tx.id===txId)return tx}
+ }
+ return null
+}
+
+// ==================== PROCESS ====================
+async function doProcess(){
+ if(!currentBatch){err('No active batch.');return}
+ if(!confirm('Process this batch? Categorized transactions will be committed to the database.'))return;
+ document.getElementById('procBtn').disabled=true;
+ try{
+  var r=await fetch('/process_batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({batch_id:currentBatch})});
+  var d=await r.json();
+  if(d.error){err(d.error);document.getElementById('procBtn').disabled=false;return}
+  document.getElementById('batchStatusBadge').innerHTML=badge('processed');
+  msg('✓ Processed: '+d.committed+' committed, '+d.excluded+' excluded');
+  document.getElementById('procBtn').disabled=true;
+  document.getElementById('catBtn').disabled=true;
+  loadStats();
+ }catch(e){err('Process error: '+e.message);document.getElementById('procBtn').disabled=false}
+}
+
+// ==================== DELETE BATCH ====================
+async function doDeleteBatch(){
+ if(!currentBatch)return;
+ if(!confirm('Discard this batch and all pending transactions?'))return;
+ try{
+  await fetch('/delete_batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({batch_id:currentBatch})});
+  currentBatch=null;
+  document.getElementById('batchArea').style.display='none';
+  msg('Batch discarded.');
+  loadStats();
+ }catch(e){err('Delete error: '+e.message)}
+}
+
+// ==================== EXPORT ====================
+function doExport(type){
+ window.open('/export/'+type,'_blank');
+}
+
+// ==================== STATS ====================
+async function loadStats(){
+ try{
+  var r=await fetch('/stats');
+  var d=await r.json();
+  var sp=d.spent||{count:0,total:0};
+  var fu=d.funding||{count:0,total:0};
+  document.getElementById('dbStats').innerHTML=
+   '<div class="sg">'+
+   '<div class="sb"><div class="n">'+sp.count+'</div><div class="l">Committed spent</div></div>'+
+   '<div class="sb"><div class="n">'+fu.count+'</div><div class="l">Committed funding</div></div>'+
+   '<div class="sb"><div class="n">$'+(fu.total||0).toFixed(0)+'</div><div class="l">Total funding</div></div>'+
+   '<div class="sb"><div class="n">$'+(sp.total||0).toFixed(0)+'</div><div class="l">Total spent</div></div>'+
+   '</div>';
+ }catch(e){document.getElementById('dbStats').innerHTML='<p class="in">Error loading stats.</p>'}
+}
+
+// ==================== OVERRIDES ====================
+var overridesData = {};
+
+async function loadOverrides(){
  var el=document.getElementById('t-overrides');
- fetch('/overrides').then(function(r){return r.json()}).then(function(data){
-  var keys=Object.keys(data);
-  if(!keys.length){el.innerHTML='<p class="in">No overrides configured.</p>';return}
-  overridesData=data;
-  var h='<div class="tw"><table><thead><tr><th>Pattern</th><th>Category</th><th></th></tr></thead><tbody>';
+ try{
+  var r=await fetch('/overrides');
+  overridesData=await r.json();
+  var keys=Object.keys(overridesData);
+  if(!keys.length){el.innerHTML='<p class="in">No overrides configured. Change a transaction category to create one.</p>';return}
+  var h='<div style="margin-bottom:8px;display:flex;gap:8px;align-items:center;"><span class="in">'+keys.length+' patterns</span><button class="br" style="padding:4px 12px;font-size:12px;" onclick="clearOverrides()">Clear all</button></div>';
+  h+='<div class="tw"><table><thead><tr><th>Pattern</th><th>Category</th><th></th></tr></thead><tbody>';
   keys.forEach(function(k){
-   h+='<tr><td style="max-width:400px;overflow:hidden;text-overflow:ellipsis;">'+k+'</td><td>'+data[k]+'</td><td><button class="br" style="padding:2px 8px;font-size:12px;" onclick="delOverride(\''+k.replace(/'/g,"\\'")+'\')">✕</button></td></tr>'
+   var safeK=k.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+   h+='<tr><td style="max-width:400px;overflow:hidden;text-overflow:ellipsis;">'+k+'</td><td>'+overridesData[k]+'</td><td><button class="br" style="padding:2px 8px;font-size:12px;" onclick="deleteOverride(\''+safeK+'\')">✕</button></td></tr>'
   });
   h+='</tbody></table></div>';
   el.innerHTML=h
- }).catch(function(){el.innerHTML='<p class="in">Error loading overrides.</p>'})
+ }catch(e){el.innerHTML='<p class="in">Error loading overrides.</p>'}
 }
 
-function delOverride(pattern){
- fetch('/delete_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:pattern})}).then(function(){
-  roverrides();
- }).catch(function(){})
+async function deleteOverride(pattern){
+ try{
+  await fetch('/delete_override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:pattern})});
+  loadOverrides();
+ }catch(e){}
 }
 
+async function clearOverrides(){
+ if(!confirm('Clear all override patterns?'))return;
+ try{
+  await fetch('/clear_overrides',{method:'POST'});
+  loadOverrides();
+ }catch(e){}
+}
+
+// ==================== TABS ====================
 function st(n,el){
  document.querySelectorAll('.tb').forEach(function(t){t.classList.remove('a')});
  document.querySelectorAll('.tc').forEach(function(t){t.classList.remove('a')});
  el.classList.add('a');document.getElementById('t-'+n).classList.add('a')
 }
+
+// ==================== INIT ====================
+loadStats();
 </script></body></html>
