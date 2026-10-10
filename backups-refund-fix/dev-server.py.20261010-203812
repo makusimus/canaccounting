@@ -269,10 +269,7 @@ def process_all(files_data):
                 det=f'{desc} — {sub}'.strip();d=nd(str(row.get('Date','')));amt=pa(str(row.get('Amount','')))
                 if amt is None: continue
                 if 'payment from -' in det.lower(): adde('Scotia Credit',d,det,abs(amt),'Payment received'); continue
-                # Keep the sign. A negative amount is money BACK from the merchant;
-                # it is categorised exactly like a spend so it OFFSETS that category
-                # in reports. Only card PAYMENTS are excluded, above. (2026-10-10)
-                adds('Scotia Credit',d,det,amt)
+                adds('Scotia Credit',d,det,abs(amt))
         
         elif bt=='rogers-credit':
             for row in rows:
@@ -284,8 +281,7 @@ def process_all(files_data):
                 amt=pa(amt_field)
                 if amt is None: continue
                 if 'payment, thank you' in det.lower(): adde('Rogers Credit',d,det,abs(amt),'Payment received'); continue
-                # Keep the sign — see the Scotia Credit note above.
-                adds('Rogers Credit',d,det,amt)
+                adds('Rogers Credit',d,det,abs(amt))
     
     spent.sort(key=lambda t:t.get('Date','') or '')
     funding.sort(key=lambda t:t.get('Date','') or '')
