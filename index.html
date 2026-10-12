@@ -519,4 +519,33 @@ function st(n,el){
 
 // ==================== INIT ====================
 loadStats();
+initPendingBatch();
+
+// Restore the view after a page refresh: pick the NEWEST batch that still has
+// uncommitted rows and show it. /batch/<id> only ever returns committed=0 rows,
+// so once a batch is committed it comes back empty and drops out of the view by
+// itself — no extra bookkeeping needed. (added 2026-10-12)
+async function initPendingBatch(){
+ try{
+  var r=await fetch('/batches');
+  if(!r.ok)return;
+  var list=await r.json();
+  for(var i=0;i<list.length;i++){
+   var b=list[i];
+   var rb=await fetch('/batch/'+b.id);
+   if(!rb.ok)continue;
+   var d=await rb.json();
+   if(!d.transactions||d.transactions.length===0)continue;   // nothing pending -> skip
+   currentBatch=d.id;
+   document.getElementById('batchIdDisplay').textContent=d.id;
+   document.getElementById('batchStatusBadge').innerHTML=badge(b.status);
+   document.getElementById('batchArea').style.display='block';
+   document.getElementById('sg').innerHTML='<p class="in">Restored batch '+d.id+' — '+d.counts.spent+' spent, '+d.counts.funding+' funding, '+d.counts.excluded+' excluded.</p>';
+   document.getElementById('catBtn').disabled = (b.status!=='uploaded');
+   document.getElementById('procBtn').disabled = (b.status==='uploaded');
+   loadBatch();
+   return;
+  }
+ }catch(e){}
+}
 </script></body></html>

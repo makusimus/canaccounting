@@ -1,0 +1,13 @@
+id,date,bank,description,amount,type,category,higher_category,reason,batch_id,committed
+354,2026-01-09,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,300.0,spent,Investments,Periodic costs,,,1
+274,2026-01-19,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,200.0,spent,Investments,Periodic costs,,,1
+695,2026-02-13,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,50.46,spent,Investments,Periodic costs,,,1
+748,2026-02-23,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,800.0,spent,Investments,Periodic costs,,,1
+766,2026-02-26,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,600.0,spent,Investments,Periodic costs,,,1
+2744,2026-06-16,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,500.0,spent,Investments,Periodic costs,,20260728_000305_38e37b2a,1
+5670,2026-09-08,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,2274.0,excluded,Investments,Periodic costs,Investments,20261010_210201_c2a4bf2a,1
+5700,2026-09-21,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,1000.0,excluded,Investments,Periodic costs,Investments,20261010_210201_c2a4bf2a,1
+5712,2026-09-28,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,1000.0,excluded,Investments,Periodic costs,Investments,20261010_210201_c2a4bf2a,1
+5722,2026-10-13,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,500.0,excluded,Investments,Periodic costs,Investments,20261010_210201_c2a4bf2a,1
+5723,2026-10-13,Simplii Debit,INVESTMENT Wealthsimple Investments Inc. CHEQUE,500.0,excluded,Investments,Periodic costs,Investments,20261010_210201_c2a4bf2a,1
+2753,2026-06-19,Scotia Debit,investment — Wealthsimple Investments Inc.,2242.94,spent,Other,Running costs,,20260728_000305_38e37b2a,1

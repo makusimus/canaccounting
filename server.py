@@ -201,14 +201,26 @@ def process_all(files_data):
     Same logic as before — no DB interaction."""
     overrides = load_overrides()
     spent, funding, excluded = [], [], []
-    
+
+    # Rows matching these are NOT imported at all. Money moved into investments is
+    # tracked in investments/investments.db, so importing it here would double-count
+    # it as spending. (Max, 2026-10-12 — also the reason the 'Investments' category
+    # no longer appears in this ledger.)
+    SKIP_PATTERNS = ('investment wealthsimple',)
+    def _skip(det):
+        dl = det.lower()
+        return any(k in dl for k in SKIP_PATTERNS)
+
     def adds(b,d,det,a):
+        if _skip(det): return
         c=catf(det,SR,overrides) or 'Other'
         spent.append({'Bank':b,'Date':d,'Transaction Details':det,'Category':c,'Amount':a})
     def addf(b,d,det,a):
+        if _skip(det): return
         c=catf(det,FR,overrides) or 'Other income'
         funding.append({'Bank':b,'Date':d,'Transaction Details':det,'Category':c,'Amount':a})
     def adde(b,d,det,a,r):
+        if _skip(det): return
         excluded.append({'Bank':b,'Date':d,'Transaction Details':det,'Amount':a,'Reason':r})
     
     for fname, text in files_data.items():
